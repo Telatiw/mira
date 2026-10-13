@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   experimental: {
     agentFeedback: true,
   },
+  logging:{
+    incomingRequests:false,
+  },
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {
