@@ -2,11 +2,13 @@
 import { Eye, EyeClosed, IdCard, Lock, Mail, UserIcon } from "lucide-react"
 import { registerSchema, registerInput } from '@/schemas/auth'
 import { ActionState, registerUser } from '@/Actions/register'
-import { useId, useState, useActionState } from "react"
+import { useId, useState, useActionState, startTransition,useEffect } from "react"
+import {useRouter} from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 const Page = () => {
     const id = useId()
+    const router = useRouter()
     const [showPass, setShowPass] = useState<boolean>(false)
     const [state, formAction, isPending] = useActionState(registerUser, {
         success: false,
@@ -23,6 +25,11 @@ const Page = () => {
         return state.errors?.[field] || clientErrors[field]?.message;
     };
 
+    useEffect(() => {
+        if (state.success) {
+            router.replace("/dashboard/:id");
+        }
+    }, [state.success, router]);
     const fields = [
         { name: "fullname", label: "نام و نام خانوادگی", icon: <UserIcon />, type: 'text', placeholder: "مثلا: یاسین ربانی" },
         { name: "username", label: "نام مستعار", icon: <IdCard />, type: 'text', placeholder: "Yosi" },
@@ -32,13 +39,15 @@ const Page = () => {
     return (
         <div className=" w-full p-8 flex flex-col gap-12 bg-background mt-16 rounded-lg">
             <div className="flex justify-between items-center">
-                <h4 className="text-2xl font-bold">ثبت نام دانش آموز</h4>
+                <h4 className="text-2xl font-bold text-nowrap">ثبت نام دانش آموز</h4>
                 <button className="text-primary font-semibold">ورود به حساب</button>
             </div>
             <form onSubmit={handleSubmit((data) => {
                 const formData = new FormData();
                 Object.entries(data).forEach(([key, value]) => formData.append(key, value));
-                formAction(formData);
+                startTransition(() => {
+                    formAction(formData)
+                })
             })} className="flex flex-col gap-y-2">
                 {fields.map(({ name, icon, label, placeholder, type }) => {
                     return (
@@ -63,7 +72,12 @@ const Page = () => {
                     </div>
                     {getError("password") && <span className="text-red-500 text-sm">{getError("password")}</span>}
                 </div>
-                <button type="submit" disabled={isPending}>{isPending ? "در حال ثبت نام..." : "ثبت نام"} </button>
+                {state.message && !state.success && (
+                    <p className="text-red-500 text-sm">
+                        {state.message}
+                    </p>
+                )}
+                <button className="bg-primary text-background py-1 rounded-sm mt-4" type="submit" disabled={isPending}>{isPending ? "در حال ثبت نام..." : "ثبت نام"} </button>
             </form>
         </div>
     )
