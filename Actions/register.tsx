@@ -7,6 +7,7 @@ export type ActionState = {
     success: boolean,
     errors?: Partial<Record<keyof registerInput, string>>;
     message?: string;
+    userId?: number;
 }
 
 export async function registerUser(prevState: ActionState, formData: FormData): Promise<ActionState> {
@@ -27,9 +28,8 @@ export async function registerUser(prevState: ActionState, formData: FormData): 
         return { success: false, errors: fieldErrors };
     }
     const hashedPassword = await hash(parsed.data.password, 12);
-    console.log(hashedPassword)
     try {
-        await prisma.user.create({
+        const newUser = await prisma.user.create({
             data: {
                 fullname: parsed.data.fullname,
                 username: parsed.data.username,
@@ -37,7 +37,7 @@ export async function registerUser(prevState: ActionState, formData: FormData): 
                 password: hashedPassword,
             },
         })
-        return { success: true, message: "کاربر با موفقیت ثبت نام شد" }
+        return { success: true, message: "کاربر با موفقیت ثبت نام شد", userId: newUser.id }
     } catch (error) {
         if (
             error instanceof Prisma.PrismaClientKnownRequestError &&

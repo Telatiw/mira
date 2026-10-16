@@ -1,10 +1,11 @@
 import { prisma } from "@/Lib/prisma";
-
+import { connection } from "next/server";
 const page = async function Dashboard({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await connection()
   const { id } = await params;
   const userId = Number(id)
 

@@ -27,7 +27,7 @@ const Page = () => {
 
     useEffect(() => {
         if (state.success) {
-            router.replace("/dashboard/:id");
+            router.replace(`/dashboard/${state.userId}`);
         }
     }, [state.success, router]);
     const fields = [
