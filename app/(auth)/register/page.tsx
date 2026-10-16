@@ -1,9 +1,10 @@
 "use client";
+import Script from 'next/script'
 import { Eye, EyeClosed, IdCard, Lock, Mail, UserIcon } from "lucide-react"
 import { registerSchema, registerInput } from '@/schemas/auth'
 import { ActionState, registerUser } from '@/Actions/register'
-import { useId, useState, useActionState, startTransition,useEffect } from "react"
-import {useRouter} from 'next/navigation'
+import { useId, useState, useActionState, startTransition, useEffect } from "react"
+import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 const Page = () => {
@@ -42,9 +43,14 @@ const Page = () => {
                 <h4 className="text-2xl font-bold text-nowrap">ثبت نام دانش آموز</h4>
                 <button className="text-primary font-semibold">ورود به حساب</button>
             </div>
-            <form onSubmit={handleSubmit((data) => {
+            <form onSubmit={handleSubmit(async (data) => {
+                const token = await window.grecaptcha.execute(
+                    process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!,
+                    { action: "signup_submit" }
+                );
                 const formData = new FormData();
                 Object.entries(data).forEach(([key, value]) => formData.append(key, value));
+                formData.append("recaptchaToken", token);
                 startTransition(() => {
                     formAction(formData)
                 })
@@ -55,7 +61,7 @@ const Page = () => {
                             <label className="font-semibold opacity-40" htmlFor={`${id}-${name}`}>{label}</label>
                             <div className="flex items-center w-full bg-third/10 p-2 rounded-lg gap-x-2">
                                 {icon}
-                                <input {...register(name)} type={type} className="placeholder:font-semibold" placeholder={placeholder} id={`${id}-${name}`} />
+                                <input required {...register(name)} type={type} className="placeholder:font-semibold" placeholder={placeholder} id={`${id}-${name}`} />
                                 {getError(name) && <span className="text-red-500 text-sm">{getError(name)}</span>}
                             </div>
                         </div>
@@ -65,7 +71,7 @@ const Page = () => {
                     <label className="font-semibold opacity-40" htmlFor={`${id}-password`}>رمز عبور</label>
                     <div className="flex items-center w-full bg-third/10 p-2 rounded-lg gap-x-2">
                         <Lock />
-                        <input {...register("password")} type={showPass ? "text" : "password"} className="placeholder:font-semibold outline-0" placeholder="حداقل ۶ کاراکتر" id={`${id}-password`} />
+                        <input required {...register("password")} type={showPass ? "text" : "password"} className="placeholder:font-semibold outline-0" placeholder="حداقل ۶ کاراکتر" id={`${id}-password`} />
                         <button type="button" onClick={() => setShowPass(s => !s)} >
                             {showPass ? <Eye /> : <EyeClosed />}
                         </button>
@@ -77,6 +83,10 @@ const Page = () => {
                         {state.message}
                     </p>
                 )}
+                <Script
+                    src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`}
+                    strategy="afterInteractive"
+                />
                 <button className="bg-primary text-background py-1 rounded-sm mt-4" type="submit" disabled={isPending}>{isPending ? "در حال ثبت نام..." : "ثبت نام"} </button>
             </form>
         </div>

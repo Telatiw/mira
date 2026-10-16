@@ -1,5 +1,6 @@
 "use server"
 import { prisma } from '@/Lib/prisma'
+import { verifyRecaptcha } from '@/Lib/recaptcha'
 import { registerInput, registerSchema } from '@/schemas/auth'
 import { hash } from 'bcryptjs'
 import { Prisma } from '@/generated/prisma/client'
@@ -11,6 +12,17 @@ export type ActionState = {
 }
 
 export async function registerUser(prevState: ActionState, formData: FormData): Promise<ActionState> {
+    const recaptchaToken = formData.get("recaptchaToken") as string;
+
+    if (!recaptchaToken) {
+        return { success: false, message: "توکن reCAPTCHA یافت نشد" };
+    }
+
+    // ۲. verify کن
+    const isValid = await verifyRecaptcha(recaptchaToken);
+    if (!isValid) {
+        return { success: false, message: "تأیید reCAPTCHA ناموفق" };
+    }
     const data = {
         fullname: formData.get("fullname") as string,
         username: formData.get("username") as string,
